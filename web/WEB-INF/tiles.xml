@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+    <!-- application layout tiles -->
+    <definition name="applicationLayout" template="/WEB-INF/jsp/layout/application.jsp">
+        <put-attribute name="title" value="Arbitrage" type="string" />
+        <put-attribute name="header" value="/WEB-INF/jsp/layout/header.jsp" />
+        <put-attribute name="body" value="/WEB-INF/jsp/layout/blank.jsp" />
+        <put-attribute name="footer" value="/WEB-INF/jsp/layout/footer.jsp" />
+        <put-list-attribute name="javascripts" cascade="true"></put-list-attribute>
+    </definition>
+    <!-- application layout tiles -->
+    
+    <!-- home layout tiles -->
+    <definition name="homeLayout" extends="applicationLayout">
+        <put-attribute name="body" value="/WEB-INF/jsp/index.jsp" />
+        <put-list-attribute name="javascripts" cascade="true">
+            <add-attribute value="/assets/myApps/scripts/js_for_index.js" />
+        </put-list-attribute>
+    </definition>
+    <!-- home layout tiles -->
+    
+    <!-- gap layout tiles -->
+    <definition name="gapLayout" extends="applicationLayout">
+        <put-attribute name="body" value="/WEB-INF/jsp/gap.jsp" />
+    </definition>
+    <!-- gap layout tiles -->
+    
+    <!-- coin layout tiles -->
+    <definition name="coinLayout" extends="applicationLayout">
+        <put-attribute name="body" value="/WEB-INF/jsp/coin.jsp" />
+    </definition>
+    <!-- coin layout tiles -->
+    
+    <definition name="eventDataLayout" template="/WEB-INF/jsp/eventData.jsp" />
+</tiles-definitions>

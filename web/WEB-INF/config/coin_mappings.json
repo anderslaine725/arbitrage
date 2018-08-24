@@ -1,0 +1,110 @@
+{
+    "mappings": [
+        {
+            "id": "Binance",
+            "coins": [
+                {
+                    "symbol": "BTCUSDT",
+                    "alias": "a1"
+                },
+                {
+                    "symbol": "ETCUSDT",
+                    "alias": "a2"
+                },
+                {
+                    "symbol": "BCCUSDT",
+                    "alias": "a3"
+                },
+                {
+                    "symbol": "TUSDBTC",
+                    "alias": "a4"
+                },
+                {
+                    "symbol": "TUSDETH",
+                    "alias": "a5"
+                },
+                {
+                    "symbol": "BNBBTC",
+                    "alias": "a6"
+                },
+                {
+                    "symbol": "ETHBTC",
+                    "alias": "a7"
+                },
+                {
+                    "symbol": "EOSETH",
+                    "alias": "a8"
+                },
+                {
+                    "symbol": "TUSDBTC",
+                    "alias": "a9"
+                },
+                {
+                    "symbol": "TUSDETH",
+                    "alias": "a10"
+                },
+                {
+                    "symbol": "TUSDBNB",
+                    "alias": "a11"
+                },
+                {
+                    "symbol": "TUSDUSDT",
+                    "alias": "a12"
+                }                
+            ]
+        },
+        {
+            "id": "Bitfinex",
+            "coins": [
+                 {
+                    "symbol": "BTCUSD",
+                    "alias": "a1"
+                },
+                {
+                    "symbol": "LTCUSD",
+                    "alias": "a2"
+                },
+                {
+                    "symbol": "ETHUSD",
+                    "alias": "a3"
+                },
+                {
+                    "symbol": "ETHBTC",
+                    "alias": "a4"
+                },
+                {
+                    "symbol": "ETCBTC",
+                    "alias": "a5"
+                },
+                {
+                    "symbol": "ETCUSD",
+                    "alias": "a6"
+                },
+                {
+                    "symbol": "RRTUSD",
+                    "alias": "a7"
+                },
+                {
+                    "symbol": "ZECUSD",
+                    "alias": "a8"
+                },
+                {
+                    "symbol": "XRPUSD",
+                    "alias": "a9"
+                },
+                {
+                    "symbol": "IOTUSD",
+                    "alias": "a10"
+                },
+                {
+                    "symbol": "BFTUSD",
+                    "alias": "a11"
+                },
+                {
+                    "symbol": "IOSUSD",
+                    "alias": "a12"
+                }
+            ]
+        }
+    ]
+}

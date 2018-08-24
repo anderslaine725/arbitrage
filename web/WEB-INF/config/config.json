@@ -1,0 +1,36 @@
+{
+    "exchanges": [
+        {
+            "id": "Binance",
+            "description": "Binance",
+            "apiKey": "AHV0roe8BRIELORQltr3jl3JP4NVtVXunC7s23caVehBo8QCwsmPnTRDmcY8azBT",
+            "secretKey": "sybpu7VynPpsEaogZ2LmJsGxz2Hzc5J0hPXK9RrT0lPDylE7hjsNHKpj1ie2ZR8B"
+        },
+        {
+            "id": "Bitfinex",
+            "description": "Bitfinex"
+        },
+        {
+            "id": "Bittrex",
+            "description": "Bittrex"
+        },
+        {
+            "id": "Huobi",
+            "description": "Huobi"
+        }
+    ],
+    "fiat_coins" : [
+        {
+            "id": "TUSD",
+            "description": "USD"
+        },
+        {
+            "id": "USDT",
+            "description": "USDT"
+        },
+        {
+            "id": "Coin pairs",
+            "description": "Coin pairs"
+        }
+    ]
+}
