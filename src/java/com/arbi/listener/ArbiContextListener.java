@@ -148,7 +148,7 @@ public class ArbiContextListener implements ServletContextListener {
 //        gap = gap.multiply(new BigDecimal(100));
         double gap = (B1.doubleValue() - A1.doubleValue()) / A.doubleValue() ;
         gap *= 100;
-        return NumberUtil.format(gap, "#.00");
+        return NumberUtil.format(gap, "0.00");
     }
     
     public MarketData getBinanceMarketData() {
