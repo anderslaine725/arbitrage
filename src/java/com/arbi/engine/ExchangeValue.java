@@ -5,6 +5,9 @@
  */
 package com.arbi.engine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Administrator
@@ -13,29 +16,18 @@ public class ExchangeValue {
     private String symbol;
     private String price;
     private String volume;
-    private String gap1;
-    private String price1;
-    private String volume1;
-    private String gap2;
-    private String price2;
-    private String volume2;
-    private String gap3;
-    private String price3;
-    private String volume3;
+    private String gap;
+    private String exchangeName;
+    
+    private List<ExchangeValue> valueList;
 
     public ExchangeValue() {
         this.symbol = "";
         this.price = "0";
         this.volume = "0";
-        this.gap1 = "0";
-        this.price1 = "0";
-        this.volume1 = "0";
-        this.gap2 = "0";
-        this.price2 = "0";
-        this.volume2 = "0";
-        this.gap3 = "0";
-        this.price3 = "0";
-        this.volume3 = "0";
+        this.gap = "0";
+        this.exchangeName = "";
+        this.valueList = new ArrayList<>();
     }
 
     public String getSymbol() {
@@ -62,77 +54,31 @@ public class ExchangeValue {
         this.volume = volume;
     }
 
-    public String getGap1() {
-        return gap1;
+    public String getGap() {
+        return gap;
     }
 
-    public void setGap1(String gap1) {
-        this.gap1 = gap1;
+    public void setGap(String gap) {
+        this.gap = gap;
     }
 
-    public String getPrice1() {
-        return price1;
+    public String getExchangeName() {
+        return exchangeName;
     }
 
-    public void setPrice1(String price1) {
-        this.price1 = price1;
+    public void setExchangeName(String exchangeName) {
+        this.exchangeName = exchangeName;
     }
 
-    public String getVolume1() {
-        return volume1;
+    public List<ExchangeValue> getValueList() {
+        return valueList;
     }
 
-    public void setVolume1(String volume1) {
-        this.volume1 = volume1;
-    }
-
-    public String getGap2() {
-        return gap2;
-    }
-
-    public void setGap2(String gap2) {
-        this.gap2 = gap2;
-    }
-
-    public String getPrice2() {
-        return price2;
-    }
-
-    public void setPrice2(String price2) {
-        this.price2 = price2;
-    }
-
-    public String getVolume2() {
-        return volume2;
-    }
-
-    public void setVolume2(String volume2) {
-        this.volume2 = volume2;
-    }
-
-    public String getGap3() {
-        return gap3;
-    }
-
-    public void setGap3(String gap3) {
-        this.gap3 = gap3;
-    }
-
-    public String getPrice3() {
-        return price3;
-    }
-
-    public void setPrice3(String price3) {
-        this.price3 = price3;
-    }
-
-    public String getVolume3() {
-        return volume3;
-    }
-
-    public void setVolume3(String volume3) {
-        this.volume3 = volume3;
+    public void setValueList(List<ExchangeValue> valueList) {
+        this.valueList = valueList;
     }
     
-    
+    public void addExchangeValue(ExchangeValue value) {
+        this.valueList.add(value);
+    }
 }

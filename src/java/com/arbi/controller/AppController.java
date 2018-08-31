@@ -12,6 +12,7 @@ import com.arbi.engine.ExchangeData;
 import com.arbi.engine.ExchangeValue;
 import com.arbi.form.search.SearchForm;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -46,7 +47,6 @@ public class AppController {
             Global.getCtxt().getAllMarketData(searchForm.getExchange(), searchForm.getFiatCoin());
         
         mav.addObject("exchanges", exchanges);
-        mav.addObject("_exchanges", exchanges);
         mav.addObject("fiat_coins", fiat_coins);
         mav.addObject("searchForm", searchForm);
         
@@ -73,25 +73,30 @@ public class AppController {
         JSONObject json = new JSONObject();
         ExchangeData exchangeData = Global.getCtxt().getExchangeData();
         List<ExchangeValue> eventDataList = null;
-        
+                
         if (exchangeData != null)
             eventDataList = exchangeData.getExchangeData();
-        
+                
         if (eventDataList != null && !eventDataList.isEmpty()) {
-            Collections.sort(eventDataList, new Comparator<ExchangeValue>() {
+            List<ExchangeValue> list = new ArrayList<>();
+            for (ExchangeValue v: eventDataList) {
+                for (ExchangeValue e: v.getValueList()) {
+                    list.add(e);
+                }
+            }
+            Collections.sort(list, new Comparator<ExchangeValue>() {
                 @Override
                 public int compare(ExchangeValue o1, ExchangeValue o2) {
-                    return (int)(Double.valueOf(o2.getGap1()) - Double.valueOf(o1.getGap1()));
+                    return (int)(Double.valueOf(o2.getGap()) - Double.valueOf(o1.getGap()));
                 }
                 
             });
-            String exchangeName = "";    
             ExchangeValue event = eventDataList.get(0);
             
-            json.put("exchange", "Binance");
+            json.put("exchange", event.getExchangeName());
             json.put("symbol", event.getSymbol());
-            json.put("gap", event.getGap1());
-            json.put("volume", event.getVolume1());
+            json.put("gap", event.getGap());
+            json.put("volume", event.getVolume());
         }
         
         response.setCharacterEncoding("UTF-8");

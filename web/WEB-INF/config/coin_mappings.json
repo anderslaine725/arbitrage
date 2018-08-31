@@ -113,6 +113,63 @@
                     "alias": "a13"
                 }
             ]
+        },
+        {
+            "id": "Bittrex",
+            "coins": [
+                {
+                    "symbol": "ETH-TUSD",
+                    "alias": "a1"
+                },
+                {
+                    "symbol": "BTC-ETH",
+                    "alias": "a2"
+                },
+                {
+                    "symbol": "USDT-ETC",
+                    "alias": "a3"
+                },
+                {
+                    "symbol": "USDT-BTC",
+                    "alias": "a4"
+                },
+                {
+                    "symbol": "BTC-ETC",
+                    "alias": "a5"
+                },
+                {
+                    "symbol": "BTC-NEOS",
+                    "alias": "a6"
+                },
+                {
+                    "symbol": "USDT-LTC",
+                    "alias": "a7"
+                },
+                {
+                    "symbol": "USDT-NEO",
+                    "alias": "a8"
+                },
+                {
+                    "symbol": "USDT-XRP",
+                    "alias": "a9"
+                },
+                {
+                    "symbol": "BTC-LTC",
+                    "alias": "a10"
+                },
+                {
+                    "symbol": "ETH-LRC",
+                    "alias": "a11"
+                },
+                {
+                    "symbol": "ETH-REP",
+                    "alias": "a12"
+                },
+                {
+                    "symbol": "BTC-TUSD",
+                    "alias": "a13"
+                }
+            ]
         }
     ]
 }

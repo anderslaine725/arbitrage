@@ -12,7 +12,8 @@
         },
         {
             "id": "Bittrex",
-            "description": "Bittrex"
+            "description": "Bittrex",
+            "trading_fee": "0.25"
         },
         {
             "id": "Huobi",

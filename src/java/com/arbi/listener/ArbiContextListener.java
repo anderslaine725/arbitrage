@@ -27,6 +27,10 @@ import com.binance.api.client.domain.account.TradeFee;
 import com.binance.api.client.domain.account.TradeFeeResult;
 import com.binance.api.client.domain.general.ExchangeInfo;
 import com.binance.api.client.domain.general.SymbolInfo;
+import com.github.ccob.bittrex4j.BittrexExchange;
+import com.github.ccob.bittrex4j.dao.Fill;
+import com.github.ccob.bittrex4j.dao.Market;
+import com.github.ccob.bittrex4j.dao.Response;
 import com.github.jnidzwetzki.bitfinex.v2.BitfinexApiBroker;
 import com.github.jnidzwetzki.bitfinex.v2.entity.APIException;
 import com.github.jnidzwetzki.bitfinex.v2.entity.BitfinexCurrencyPair;
@@ -37,6 +41,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -55,10 +60,12 @@ public class ArbiContextListener implements ServletContextListener {
     private BinanceAggTradeData aggTradeData;
     private MarketData binanceMarketData;
     private MarketData bitfinexMarketData;
+    private MarketData bittrexMarketData;
     private ExchangeData exchangeData;
     private ExchangeFee exchangeFee;
     private List<BitfinexApiBroker> brokers; 
     private String prevEx = "";
+    private List<BittrexExchange> bittrexWss;
     
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -102,6 +109,8 @@ public class ArbiContextListener implements ServletContextListener {
         wss = new ArrayList<>();
         
         brokers = new ArrayList<>();
+        
+        bittrexWss = new ArrayList<>();
     }
     
     @Override
@@ -122,6 +131,16 @@ public class ArbiContextListener implements ServletContextListener {
         if (brokers != null) {
             for (BitfinexApiBroker broker: brokers) {
                 broker.close();
+            }
+        }
+        
+        if (bittrexWss != null) {
+            for (BittrexExchange api: bittrexWss) {
+                try {
+                    api.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
         
@@ -232,12 +251,24 @@ public class ArbiContextListener implements ServletContextListener {
         
 //        if (bitfinexApiBroker != null)
 //            bitfinexApiBroker.close();
+
+        if (bittrexWss != null) {
+            for (BittrexExchange ws: bittrexWss) {
+                try {
+                    ws.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        
+        bittrexWss.clear();
         
         exchangeSymbol.clear();
         exchangeFee.clear();
         exchangeData.clear();
         
-        if (exchangeName.equals("Binance")) {
+        if (exchangeName.equals(Constant.BINANCE)) {
             BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance("AHV0roe8BRIELORQltr3jl3JP4NVtVXunC7s23caVehBo8QCwsmPnTRDmcY8azBT", "sybpu7VynPpsEaogZ2LmJsGxz2Hzc5J0hPXK9RrT0lPDylE7hjsNHKpj1ie2ZR8B");
             BinanceApiRestClient client = factory.newRestClient();
             ExchangeInfo exchangeInfo = client.getExchangeInfo();
@@ -255,7 +286,7 @@ public class ArbiContextListener implements ServletContextListener {
                     exchangeFee.putFee(tradeFee.getSymbol(), tradeFee.getTaker());
             }
             
-        } else if (exchangeName.equals("Bitfinex")) {
+        } else if (exchangeName.equals(Constant.BITFINEX)) {
             Exchange exchange = ExchangeFactory.INSTANCE.createExchange(BitfinexExchange.class.getName());
             BitfinexMarketDataServiceRaw dataService = (BitfinexMarketDataServiceRaw) exchange.getMarketDataService();
             Collection<String> symbols = dataService.getBitfinexSymbols();
@@ -268,6 +299,18 @@ public class ArbiContextListener implements ServletContextListener {
                     exchangeSymbol.addSymbol(sym);
                 }    
             }
+        } else if (exchangeName.equals(Constant.BITTREX)) {
+            BittrexExchange restApi = new BittrexExchange();
+            Response<Market[]> result = restApi.getMarkets();
+            if (result != null) {
+                for (Market market: result.getResult()) {
+                    exchangeSymbol.addSymbol(market.getMarketName());
+                }
+            }
+            List<com.arbi.core.Exchange> exchanges = Global.getConfig().getExchanges();
+            com.arbi.core.Exchange bittrex = exchanges.stream().filter(e -> e.getId().equals(Constant.BITTREX)).findFirst().get();
+            if (bittrex != null)
+                exchangeFee.putFee("bittrexFee", bittrex.getTradingFee());
         }
         
         
@@ -284,17 +327,23 @@ public class ArbiContextListener implements ServletContextListener {
         binanceApiWSClient = BinanceApiClientFactory.newInstance().newWebSocketClient();
                 
         for (String symbol: symbols) {
-            String binanceSym = null, bitfinexSym = null;
+            String binanceSym = null, bitfinexSym = null, bittrexSym = null;
             
             if (exchangeName.equals(Constant.BINANCE)) {
                 binanceSym = symbol;
-                bitfinexSym = findSymbol(Constant.BINANCE, Constant.BITFINEX, symbol);
+                bitfinexSym = findSymbol(Constant.BINANCE, Constant.BITFINEX, symbol);   
+                bittrexSym = findSymbol(Constant.BINANCE, Constant.BITTREX, symbol);
             } else if (exchangeName.equals(Constant.BITFINEX)) {
                 binanceSym = findSymbol(Constant.BITFINEX, Constant.BINANCE, symbol);
                 bitfinexSym = symbol;
+                bittrexSym = findSymbol(Constant.BITFINEX, Constant.BITTREX, symbol);
+            } else if (exchangeName.equals(Constant.BITTREX)) {
+                binanceSym = findSymbol(Constant.BITTREX, Constant.BINANCE, symbol);
+                bitfinexSym = findSymbol(Constant.BITTREX, Constant.BITFINEX, symbol);
+                bittrexSym = symbol;
             }
             
-            if (binanceSym == null || bitfinexSym == null)
+            if (binanceSym == null || bitfinexSym == null || bittrexSym == null)
                 continue;
             
             Closeable ws = binanceApiWSClient.onAggTradeEvent(binanceSym.toLowerCase(), event -> {
@@ -311,21 +360,38 @@ public class ArbiContextListener implements ServletContextListener {
                 binanceMarketData.addMarketData(eventData);
                 
                 if (exchangeName.equals(Constant.BINANCE)) {
-                    ExchangeValue value = new ExchangeValue();
-                    value.setSymbol(event.getSymbol());
-                    value.setPrice(event.getPrice());
-                    value.setVolume(event.getQuantity());
+                    ExchangeValue main = new ExchangeValue();
+                    main.setSymbol(event.getSymbol());
+                    main.setPrice(event.getPrice());
+                    main.setVolume(event.getQuantity());
                     
                     if (bitfinexMarketData != null) {
-                        EventData bitfinex = bitfinexMarketData.findMaketData(Constant.BINANCE, Constant.BITFINEX, value.getSymbol());
+                        EventData bitfinex = bitfinexMarketData.findMaketData(Constant.BINANCE, Constant.BITFINEX, main.getSymbol());
                         if (bitfinex != null) {
-                            value.setPrice1(bitfinex.getPrice());
-                            value.setVolume1(bitfinex.getQuantity());
-                            String fees = this.exchangeFee.getFee(value.getSymbol());
-                            value.setGap1(calcGap(value.getPrice(), bitfinex.getPrice(), fees));
+                            ExchangeValue val = new ExchangeValue();
+                            val.setPrice(bitfinex.getPrice());
+                            val.setVolume(bitfinex.getQuantity());
+                            String fees = this.exchangeFee.getFee(main.getSymbol());
+                            val.setGap(calcGap(main.getPrice(), bitfinex.getPrice(), fees));
+                            val.setExchangeName(Constant.BITFINEX);
+                            main.addExchangeValue(val);
                         }
                     }
-                    exchangeData.addExchangeData(value);
+                    
+                    if (bittrexMarketData != null) {
+                        EventData bittrex = bitfinexMarketData.findMaketData(Constant.BINANCE, Constant.BITTREX, main.getSymbol());
+                        if (bittrex != null) {
+                            ExchangeValue val = new ExchangeValue();
+                            val.setPrice(bittrex.getPrice());
+                            val.setVolume(bittrex.getQuantity());
+                            String fees = this.exchangeFee.getFee(main.getSymbol());
+                            val.setGap(calcGap(main.getPrice(), bittrex.getPrice(), fees));
+                            val.setExchangeName(Constant.BITTREX);
+                            main.addExchangeValue(val);
+                        }
+                    }
+                    
+                    exchangeData.addExchangeData(main);
                 }
             });
             wss.add(ws);
@@ -344,7 +410,6 @@ public class ArbiContextListener implements ServletContextListener {
 //            }
             
 //            System.out.println(symbol);
-                
             int mid = bitfinexSym.length() / 2;
             String s1 = bitfinexSym.substring(0, mid);
             String s2 = bitfinexSym.substring(mid);
@@ -380,6 +445,7 @@ public class ArbiContextListener implements ServletContextListener {
                         
                         if (bitfinexMarketData == null)
                             bitfinexMarketData = new MarketData();
+                        
                         EventData event = new EventData();
                         event.setSymbol(s.getBitfinexCurrencyPair().toBitfinexString().substring(1));
                         event.setPrice(tick.getLastPrice().toString());
@@ -387,21 +453,38 @@ public class ArbiContextListener implements ServletContextListener {
                         bitfinexMarketData.addMarketData(event);
 
                         if (exchangeName.equals(Constant.BITFINEX)) {
-                            ExchangeValue value = new ExchangeValue();
-                            value.setSymbol(event.getSymbol());
-                            value.setPrice(event.getPrice());
-                            value.setVolume(event.getQuantity());
+                            ExchangeValue main = new ExchangeValue();
+                            main.setSymbol(event.getSymbol());
+                            main.setPrice(event.getPrice());
+                            main.setVolume(event.getQuantity());
 
                             if (binanceMarketData != null) {
-                            EventData binance = binanceMarketData.findMaketData(Constant.BITFINEX, Constant.BINANCE, value.getSymbol());
+                                EventData binance = binanceMarketData.findMaketData(Constant.BITFINEX, Constant.BINANCE, main.getSymbol());
                                 if (binance != null) {
-                                    value.setPrice1(binance.getPrice());
-                                    value.setVolume1(binance.getQuantity());
-                                    String fees = exchangeFee.getFee(value.getSymbol());
-                                    value.setGap1(calcGap(value.getPrice(), binance.getPrice(), fees));
+                                    ExchangeValue val = new ExchangeValue();
+                                    val.setPrice(binance.getPrice());
+                                    val.setVolume(binance.getQuantity());
+                                    String fees = exchangeFee.getFee(main.getSymbol());
+                                    val.setGap(calcGap(main.getPrice(), binance.getPrice(), fees));
+                                    val.setExchangeName(Constant.BINANCE);
+                                    main.addExchangeValue(val);
                                 }
                             }
-                            exchangeData.addExchangeData(value);
+                            
+                            if (bittrexMarketData != null) {
+                                EventData bittrex = bittrexMarketData.findMaketData(Constant.BITFINEX, Constant.BITTREX, main.getSymbol());
+                                if (bittrex != null) {
+                                    ExchangeValue val = new ExchangeValue();
+                                    val.setPrice(bittrex.getPrice());
+                                    val.setVolume(bittrex.getQuantity());
+                                    String fees = exchangeFee.getFee(main.getSymbol());
+                                    val.setGap(calcGap(main.getPrice(), bittrex.getPrice(), fees));
+                                    val.setExchangeName(Constant.BITTREX);
+                                    main.addExchangeValue(val);
+                                }
+                            }
+                            
+                            exchangeData.addExchangeData(main);
                         }
                     };
 
@@ -419,6 +502,79 @@ public class ArbiContextListener implements ServletContextListener {
 //            };
             
 //            new Thread(runnable).start();
+
+            BittrexExchange bittrexWs = new BittrexExchange();
+            final String bittrexMarketName = bittrexSym;
+            
+            bittrexWs.onUpdateExchangeState(updateExchangeState -> {            
+                double volume = Arrays.stream(updateExchangeState.getFills())
+                        .mapToDouble(Fill::getQuantity)
+                        .sum();
+                
+                double price = Arrays.stream(updateExchangeState.getFills())
+                        .mapToDouble(Fill::getPrice).sum();
+
+                if(updateExchangeState.getFills().length > 0) {
+                    System.out.println(String.format("N: %d, %02f volume %02f price for %s", updateExchangeState.getNounce(),
+                            volume, price, updateExchangeState.getMarketName()));
+                    
+                    if (bittrexMarketData == null)
+                        bittrexMarketData = new MarketData();
+                        
+                        EventData event = new EventData();
+                        event.setSymbol(bittrexMarketName);
+                        event.setPrice(String.valueOf(price));
+                        event.setQuantity(String.valueOf(volume));
+                        bittrexMarketData.addMarketData(event);
+
+                        if (exchangeName.equals(Constant.BITTREX)) {
+                            ExchangeValue main = new ExchangeValue();
+                            main.setSymbol(event.getSymbol());
+                            main.setPrice(event.getPrice());
+                            main.setVolume(event.getQuantity());
+
+                            if (binanceMarketData != null) {
+                                EventData binance = binanceMarketData.findMaketData(Constant.BITTREX, Constant.BINANCE, main.getSymbol());
+                                if (binance != null) {
+                                    ExchangeValue val = new ExchangeValue();
+                                    val.setPrice(binance.getPrice());
+                                    val.setVolume(binance.getQuantity());
+                                    String fees = exchangeFee.getFee("bittrexFee");
+                                    val.setGap(calcGap(main.getPrice(), binance.getPrice(), fees));
+                                    val.setExchangeName(Constant.BINANCE);
+                                    main.addExchangeValue(val);
+                                }
+                            }
+                            
+                            if (bitfinexMarketData != null) {
+                                EventData bitfinex = bitfinexMarketData.findMaketData(Constant.BITTREX, Constant.BITFINEX, main.getSymbol());
+                                if (bitfinex != null) {
+                                    ExchangeValue val = new ExchangeValue();
+                                    val.setPrice(bitfinex.getPrice());
+                                    val.setVolume(bitfinex.getQuantity());
+                                    String fees = exchangeFee.getFee("bittrexFee");
+                                    val.setGap(calcGap(main.getPrice(), bitfinex.getPrice(), fees));
+                                    val.setExchangeName(Constant.BITFINEX);
+                                    main.addExchangeValue(val);
+                                }
+                            }
+                            
+                            exchangeData.addExchangeData(main);
+                        }
+                    
+                }
+            });
+                        
+            bittrexWs.connectToWebSocket(() -> {
+                bittrexWs.queryExchangeState(bittrexMarketName, exchangeState -> {
+                    System.out.println(String.format("%s order book has %d open buy orders and %d open sell orders (500 return limit)", bittrexMarketName, exchangeState.getBuys().length, exchangeState.getSells().length));
+
+                });
+                bittrexWs.subscribeToExchangeDeltas(bittrexMarketName, null);
+                bittrexWs.subscribeToMarketSummaries(null);
+            });
+            
+            bittrexWss.add(bittrexWs);
         }
            
     }

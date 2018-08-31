@@ -10,6 +10,15 @@ public class Exchange {
     private String description;
     private String apiKey;
     private String secretKey;
+    private String tradingFee;
+
+    public String getTradingFee() {
+        return tradingFee;
+    }
+
+    public void setTradingFee(String tradingFee) {
+        this.tradingFee = tradingFee;
+    }
 
     public String getId() {
         return id;

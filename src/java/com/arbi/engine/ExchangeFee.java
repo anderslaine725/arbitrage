@@ -24,7 +24,7 @@ public class ExchangeFee {
         map.put(key, fee);
     }
     
-    public String getFee(String symbol) {
+    public String getFee(String symbol) {        
         String key = symbol.toLowerCase();
         if (map.containsKey(key))
             return map.get(key);
